@@ -17,6 +17,9 @@ def get_item_by_id(db: Session, item_id: int):
 def get_customer_by_phone(db: Session, phone: str):
     return db.query(models.Customer).filter(models.Customer.phone == phone).first()
 
+def get_customer_by_id(db: Session, id: int):
+    return db.query(models.Customer).filter(models.Customer.id == id).first()
+
 def create_customer(db: Session, customer: schemas.CustomerCreate):
     db_customer = models.Customer(**customer.model_dump())
     db.add(db_customer)
@@ -29,3 +32,13 @@ def get_customers(db: Session, skip: int = 0, limit: int = 100):
 
 def get_item_by_article(db:Session, article: str):
     return db.query(models.Item).filter(models.Item.article == article).first()
+
+def create_order(db: Session, order: schemas.OrderCreate):
+    db_order = models.Order(**order.model_dump())
+    db.add(db_order)
+    db.commit()
+    db.refresh(db_order)
+    return db_order
+
+def get_orders(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Order).offset(skip).limit(limit).all()

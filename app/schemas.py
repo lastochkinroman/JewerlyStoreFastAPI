@@ -33,3 +33,18 @@ class Customer(CustomerBase):
 
     class Config:
         from_attributes = True
+
+class OrderBase(BaseModel):
+    customer_id: int
+    item_id: int
+    sale_price: float
+
+class OrderCreate(OrderBase):
+    pass
+
+class Order(OrderBase):
+    id: int
+    sold_at: datetime
+
+    class Config:
+        from_attributes = True

@@ -37,3 +37,19 @@ def create_customer(customer: schemas.CustomerCreate, db: Session = Depends(get_
     if db_customer:
         raise HTTPException(status_code=400, detail='Клиент с таким телефоном уже зарегистрирован')
     return crud.create_customer(db=db, customer=customer)
+
+@app.post("/orders/", response_model=schemas.Order)
+def create_order(order: schemas.OrderCreate, db: Session = Depends(get_db)):
+    db_item = crud.get_item_by_id(db, item_id=order.item_id)
+    if not db_item:
+        raise HTTPException(status_code=404, detail="Товар не найден")
+    
+    db_customer = crud.get_customer_by_id(db, id=order.customer_id)
+    if not db_customer:
+        raise HTTPException(status_code=404, detail="Клиент не найден")
+    
+    return crud.create_order(db=db, order=order)
+
+@app.get("/orders/", response_model=list[schemas.Order])
+def read_orders(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    return crud.get_orders(db, skip=skip, limit=limit)
