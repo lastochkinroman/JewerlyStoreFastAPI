@@ -3,6 +3,9 @@ from .database import SessionLocal, engine
 from . import schemas, models
 from sqlalchemy.orm import Session
 from . import crud
+from fastapi.security import OAuth2PasswordRequestForm
+from .auth import verify_password, create_access_token
+
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -53,3 +56,20 @@ def create_order(order: schemas.OrderCreate, db: Session = Depends(get_db)):
 @app.get("/orders/", response_model=list[schemas.Order])
 def read_orders(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return crud.get_orders(db, skip=skip, limit=limit)
+
+@app.post("/users/", response_model=schemas.User)
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    return crud.create_user(db, user=user)
+
+@app.post("/token")
+def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.username == form_data.username).first()
+
+    if not user or not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=401,
+            detail="Неверное имя пользователя или пароль",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    access_token = create_access_token(data={"sub": user.username})
+    return {"access_token": access_token, "token_type": "bearer"}

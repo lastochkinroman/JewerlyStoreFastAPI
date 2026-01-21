@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
+from .auth import get_password_hash
+
 
 def create_item(db: Session, item: schemas.ItemCreate):
     db_item = models.Item(**item.model_dump())
@@ -42,3 +44,14 @@ def create_order(db: Session, order: schemas.OrderCreate):
 
 def get_orders(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Order).offset(skip).limit(limit).all()
+
+def create_user(db: Session, user: schemas.UserCreate):
+    hashed_password = get_password_hash(user.password)
+    db_user = models.User(
+        username = user.username,
+        hashed_password=hashed_password
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
