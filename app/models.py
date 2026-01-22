@@ -34,7 +34,7 @@ class Order(Base):
     sold_at = Column(DateTime, default=datetime.utcnow)
 
     customer = relationship("Customer")
-    item = relationship("item")
+    item = relationship("Item")
 
 
 class User(Base):

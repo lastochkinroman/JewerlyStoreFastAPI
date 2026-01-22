@@ -4,7 +4,7 @@ from . import schemas, models
 from sqlalchemy.orm import Session
 from . import crud
 from fastapi.security import OAuth2PasswordRequestForm
-from .auth import verify_password, create_access_token
+from .auth import verify_password, create_access_token, get_current_user
 
 
 models.Base.metadata.create_all(bind=engine)
@@ -19,7 +19,7 @@ def get_db():
         db.close()
 
 @app.post('/items/', response_model=schemas.Item)
-def create_item(item: schemas.ItemCreate, db: Session = Depends(get_db)):
+def create_item(item: schemas.ItemCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     db_item = crud.get_item_by_article(db, article=item.article)
     if db_item:
         raise HTTPException(status_code=400, detail="Артикул уже существует")
@@ -31,7 +31,7 @@ def read_items(skip: int=0, limit: int = 100, db: Session = Depends(get_db)):
     return items
 
 @app.get("/customers/", response_model=list[schemas.Customer])
-def read_customers(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def read_customers(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     return crud.get_customers(db, skip=skip, limit=limit)
 
 @app.post("/customers", response_model=schemas.Customer)
@@ -73,3 +73,4 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
         )
     access_token = create_access_token(data={"sub": user.username})
     return {"access_token": access_token, "token_type": "bearer"}
+
